@@ -117,74 +117,257 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
+})({"animation.js":[function(require,module,exports) {
+var spriteSheet = document.getElementById('characterSprites');
+var spriteSheetContinentsRunX = [230, 320, 410, 500, 590, 680];
+var spriteSheetContinentsidleX = [230, 320, 410, 500];
+var spriteSheetContinentsY = [35, 125, 385];
+var animationMatrix = [];
+var cycle = 0;
+var characterStep = 0;
+var groundState = 0;
 
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-
-  return bundleURL;
+function spriteLookLeft(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight, context) {
+  context.translate(dx + dWidth, dy);
+  context.scale(-1, 1);
+  context.drawImage(image, sx, sy, sWidth, sHeight, 0, 0, dWidth, dHeight);
+  context.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+window.drawSprite = function drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY) {
+  //every render generates a cycle and cycle move through srpitesheet matricies at an ajusting rate.
+  if (cycle >= 32 / animationMatrix.length) {
+    characterStep++;
+    cycle = 0;
+  } //character setps from 0-(matrix length-1) then reset
 
-    if (matches) {
-      return getBaseURL(matches[0]);
+
+  if (characterStep >= animationMatrix.length) {
+    characterStep = 0;
+  } //change character matrix based on speed polarity
+
+
+  if (speedY == 0) {
+    if (speedX < 0) {
+      characterImageY = spriteSheetContinentsY[1];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[characterStep];
+      spriteLookLeft(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight, context);
+    } else if (speedX > 0) {
+      characterImageY = spriteSheetContinentsY[1];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[characterStep];
+      context.drawImage(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight);
+    } else {
+      var characrterImageX = spriteSheetContinentsidleX[characterStep];
+      characterImageY = spriteSheetContinentsY[0];
+      animationMatrix = spriteSheetContinentsidleX;
+      context.drawImage(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight);
     }
   }
 
-  return '/';
-}
+  if (speedY < 0) {
+    if (speedX < 0) {
+      characterImageY = spriteSheetContinentsY[2];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[2];
+      spriteLookLeft(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight, context);
+    } else {
+      characterImageY = spriteSheetContinentsY[2];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[2];
+      context.drawImage(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight);
+    }
+  }
 
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
-}
+  if (speedY > 0) {
+    if (speedX < 0) {
+      characterImageY = spriteSheetContinentsY[2];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[4];
+      spriteLookLeft(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight, context);
+    } else {
+      characterImageY = spriteSheetContinentsY[2];
+      animationMatrix = spriteSheetContinentsRunX;
+      var characrterImageX = spriteSheetContinentsRunX[4];
+      context.drawImage(spriteSheet, characrterImageX, characterImageY, 80, 70, startX, startY, characterWidth, characterHeight);
+    }
+  }
 
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"../node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
+  cycle++;
+};
+},{}],"map.js":[function(require,module,exports) {
+"use strict";
 
-function updateLink(link) {
-  var newLink = link.cloneNode();
+require("./animation");
 
-  newLink.onload = function () {
-    link.remove();
-  };
+window.drawRect = function drawRect(context, margin, color, x, y, width, height) {
+  context.fillStyle = color;
+  context.fillRect(x + margin, y + margin, width, height);
+};
 
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
+window.platform = function platform(context, margin, color, x, y, width, height, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround) {
+  drawRect(context, margin, color, x, y, width, height);
 
-var cssTimeout = null;
+  if (startX + characterWidth >= margin + x && startX <= margin + x + width) {
+    if (startY + characterHeight < margin + y && stopY + characterHeight > margin + y) {
+      stopY = margin + y - characterHeight;
+      speedY = 0;
+      onGround = true;
+    }
+  }
+};
 
-function reloadCSS() {
-  if (cssTimeout) {
+window.drawMap = function drawMap(context, margin, width, height, startX, stopX, startY, stopY, characterWidth, characterHeight, speedY, onGround) {
+  //draw background
+  drawRect(context, margin, "#a6a6a6", 0, 0, width, height); //platform width defined by characterWith*n as to adjust with screen size
+
+  var platWidth = characterWidth; //draw floor
+
+  platform(context, margin, "#00670c", 0, height / 2, width, height, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround); //draw platform, platform X given in width*n/20 where n is 1-20 to allow for screen adjust
+
+  platform(context, margin, '#000000', width * 19 / 20 - platWidth, 250, platWidth * 2, 10, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround);
+  platform(context, margin, '#FFFFFF', width * 17 / 20 - platWidth, 400, platWidth * 3, 10, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround);
+};
+},{"./animation":"animation.js"}],"gamejs.js":[function(require,module,exports) {
+"use strict";
+
+require("./map");
+
+require("./animation");
+
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
+var margin = 10; //set canvas size to window size minus margin
+
+context.canvas.width = window.innerWidth - margin;
+context.canvas.height = window.innerHeight - margin; //scale character to window
+
+var characterWidth = window.innerWidth / 20;
+var characterHeight = window.innerWidth * 3 / 40; //starting possion and movement
+
+var jumpHeight = 20;
+var moveRight = false;
+var moveLeft = false;
+var jumpNow = false;
+var onGround = false;
+var fast = 5;
+var grav = 1;
+var startX = context.canvas.width / 4 + margin / 2 - characterWidth / 2;
+var speedX = 0;
+var stopX = [];
+var startY = margin + context.canvas.height / 4 - characterHeight;
+var speedY = 0;
+var stopY = [];
+
+var render = function render() {
+  //if move imput detected change speed
+  if (moveRight) {
+    speedX = fast;
+  }
+
+  if (moveLeft) {
+    speedX = -fast;
+  } //define stopX
+
+
+  stopX = startX + speedX; //if character hits the walls stop speed
+
+  if (stopX + characterWidth > context.canvas.width) {
+    speedX = 0;
+    startX = context.canvas.width - characterWidth;
+  } else if (stopX < margin) {
+    speedX = 0;
+    startX = margin;
+  } else {
+    //move character equal to speed
+    startX = stopX;
+  }
+
+  if (jumpNow && onGround) {
+    onGround = false;
+    speedY -= jumpHeight;
+  }
+
+  jumpNow = false; //add gravity to speedY while not on ground
+
+  if (onGround) {
+    speedY = 0;
+  } else {
+    speedY += grav;
+  } //define stopY
+
+
+  stopY = startY + speedY; //stop character at floor or move down
+
+  if (stopY + characterHeight >= margin + context.canvas.height / 2) {
+    startY = margin + context.canvas.height / 2 - characterHeight;
+    speedY = 0;
+    onGround = true;
+  } else {
+    startY = stopY;
+    onGround = false;
+  }
+
+  drawMap(context, margin, context.canvas.width, context.canvas.height, startX, startY, characterWidth, characterHeight, speedY, onGround); // console.log(speedY)
+  // console.log(startY)
+  // console.log(onGround)
+  //draw character
+
+  drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY); // //fix margin overlap
+
+  drawRect(context, '#FFFFFF', -margin, -margin, margin, context.canvas.height);
+  drawRect(context, '#FFFFFF', -margin, -margin, context.canvas.width, margin);
+  speedX = 0;
+  debugger;
+  requestAnimationFrame(render);
+};
+
+window.addEventListener('keydown', function (event) {
+  if (event.defaultPrevented) {
     return;
   }
 
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
+  switch (event.key) {
+    case "ArrowLeft":
+      moveLeft = true;
+      break;
 
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
+    case "ArrowRight":
+      moveRight = true;
+      break;
 
-    cssTimeout = null;
-  }, 50);
-}
+    case "ArrowUp":
+      jumpNow = true;
 
-module.exports = reloadCSS;
-},{"./bundle-url":"../node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+    default:
+      return;
+  }
+
+  event.preventDefault();
+}, true);
+window.addEventListener('keyup', function (event) {
+  if (event.defaultPrevented) {
+    return;
+  }
+
+  switch (event.key) {
+    case "ArrowLeft":
+      moveLeft = false;
+      break;
+
+    case "ArrowRight":
+      moveRight = false;
+      break;
+
+    default:
+      return;
+  }
+
+  event.preventDefault();
+}, true);
+requestAnimationFrame(render);
+},{"./map":"map.js","./animation":"animation.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -212,7 +395,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56561" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58026" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -388,5 +571,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js"], null)
-//# sourceMappingURL=/browsergameHTML.js.map
+},{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","gamejs.js"], null)
+//# sourceMappingURL=/gamejs.d4cc4d7b.js.map
