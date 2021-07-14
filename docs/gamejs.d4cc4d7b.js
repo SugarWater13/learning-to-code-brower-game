@@ -117,7 +117,42 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"animation.js":[function(require,module,exports) {
+})({"map.js":[function(require,module,exports) {
+window.drawRect = function drawRect(context, margin, color, x, y, width, height) {
+  context.fillStyle = color;
+  context.fillRect(x + margin, y + margin, width, height);
+};
+
+function Plat(context, margin, color, x, y, width, height) {
+  this.context = context;
+  this.margin = margin;
+  this.color = color;
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+}
+
+window.drawMap = function drawMap(context, margin, width, height) {
+  //draw background
+  drawRect(context, margin, "#a6a6a6", 0, 0, width, height); //platform width defined by characterWith*n as to adjust with screen size
+
+  var platWidth = width / 20; //draw floor
+
+  drawRect(context, margin, "#00670c", 0, height / 2, width, height); //delete me
+
+  drawRect(context, margin, '#000000', width * 19 / 20 - platWidth, 250, platWidth * 2, 10); //define platforms
+
+  var plat1 = new Plat(context, margin, '#000000', width * 19 / 20 - platWidth, 250, platWidth * 2, 10);
+  var plat2 = new Plat(context, margin, '#FFFFFF', width * 17 / 20 - platWidth, 400, platWidth * 3, 10); //define map
+
+  var levelMap = [plat1, plat2]; //draw map
+
+  for (var i = 0; i < levelMap.length; i++) {
+    drawRect(levelMap[i].context, levelMap[i].margin, levelMap[i].color, levelMap[i].x, levelMap[i].y, levelMap[i].width, levelMap[i].hight);
+  }
+};
+},{}],"animation.js":[function(require,module,exports) {
 var spriteSheet = document.getElementById('characterSprites');
 var spriteSheetContinentsRunX = [230, 320, 410, 500, 590, 680];
 var spriteSheetContinentsidleX = [230, 320, 410, 500];
@@ -196,43 +231,12 @@ window.drawSprite = function drawSprite(speedX, context, startX, startY, charact
 
   cycle++;
 };
-},{}],"map.js":[function(require,module,exports) {
-"use strict";
-
-require("./animation");
-
-window.drawRect = function drawRect(context, margin, color, x, y, width, height) {
-  context.fillStyle = color;
-  context.fillRect(x + margin, y + margin, width, height);
-};
-
-window.platform = function platform(context, margin, color, x, y, width, height, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround) {
-  drawRect(context, margin, color, x, y, width, height);
-
-  if (startX + characterWidth >= margin + x && startX <= margin + x + width) {
-    if (startY + characterHeight < margin + y && stopY + characterHeight > margin + y) {
-      stopY = margin + y - characterHeight;
-      speedY = 0;
-      onGround = true;
-    }
-  }
-};
-
-window.drawMap = function drawMap(context, margin, width, height, startX, stopX, startY, stopY, characterWidth, characterHeight, speedY, onGround) {
-  //draw background
-  drawRect(context, margin, "#a6a6a6", 0, 0, width, height); //platform width defined by characterWith*n as to adjust with screen size
-
-  var platWidth = characterWidth; //draw floor
-
-  platform(context, margin, "#00670c", 0, height / 2, width, height, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround); //draw platform, platform X given in width*n/20 where n is 1-20 to allow for screen adjust
-
-  platform(context, margin, '#000000', width * 19 / 20 - platWidth, 250, platWidth * 2, 10, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround);
-  platform(context, margin, '#FFFFFF', width * 17 / 20 - platWidth, 400, platWidth * 3, 10, startX, startY, stopY, characterWidth, characterHeight, speedY, onGround);
-};
-},{"./animation":"animation.js"}],"gamejs.js":[function(require,module,exports) {
+},{}],"gamejs.js":[function(require,module,exports) {
 "use strict";
 
 require("./map");
+
+var _map2 = require("./map.js");
 
 require("./animation");
 
@@ -309,10 +313,18 @@ var render = function render() {
     onGround = false;
   }
 
-  drawMap(context, margin, context.canvas.width, context.canvas.height, startX, startY, characterWidth, characterHeight, speedY, onGround); // console.log(speedY)
-  // console.log(startY)
-  // console.log(onGround)
-  //draw character
+  drawMap(context, margin, context.canvas.width, context.canvas.height, startX, stopX, startY, stopY, characterWidth, characterHeight, speedY, onGround);
+
+  for (var i = 0; i < length.levelMap; i++) {
+    if (startX + characterWidth >= margin + _map2.levelMap[i].x && startX <= margin + _map2.levelMap[i].x + _map2.levelMap[i].width) {
+      if (startY + characterHeight < margin + _map2.levelMap[i].y && stopY + characterHeight > margin + _map2.levelMap[i].y) {
+        stopY = margin + _map2.levelMap[i].y - characterHeight;
+        speedY = 0;
+        onGround = true;
+      }
+    }
+  } //draw character
+
 
   drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY); // //fix margin overlap
 
@@ -367,7 +379,7 @@ window.addEventListener('keyup', function (event) {
   event.preventDefault();
 }, true);
 requestAnimationFrame(render);
-},{"./map":"map.js","./animation":"animation.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./map":"map.js","./map.js":"map.js","./animation":"animation.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -395,7 +407,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58065" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53115" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -572,4 +584,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","gamejs.js"], null)
-//# sourceMappingURL=/learning-to-code-brower-game/gamejs.d4cc4d7b.js.map
+//# sourceMappingURL=/gamejs.d4cc4d7b.js.map
