@@ -1,5 +1,3 @@
-
-
 window.drawRect = function drawRect(context, margin, color, x, y, width, height) {
     context.fillStyle = color
     context.fillRect(x + margin, y + margin, width, height);
@@ -27,14 +25,8 @@ window.drawMap = function drawMap(context, margin, width, height) {
 
     //define platforms
     var levelMap = []
-    
-    fs.readFile('level1.json', (err, data) => {
-        if (err) return
-        
-        level1 = JSON.parse(data)
-    })
-    
-    const mapData = JSON.parse(level1)
+      
+    var mapData = require('./level1.json')
 
     for (i = 0; i < mapData.length; i++) {
         newPlat = new Plat(mapData(i).context, mapData(i).margin, mapData(i).color, mapData(i).x, mapData(i).y, mapData(i).width, mapData(i).height)

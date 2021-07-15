@@ -95,14 +95,14 @@ var render = function () {
         }
     }
 
-    if (            
+    if (
         //character walks off left side of platform
         stopX + characterWidth < levelMap[standingOn].x
         //character walks off right side of platform
         || stopX > levelMap[standingOn].x + levelMap[standingOn].width
-        ) {
-            onGround = false;
-        }
+    ) {
+        onGround = false;
+    }
 
     startY = stopY;
 

@@ -1,0 +1,29 @@
+[
+    {
+        "context": "context",
+        "margin": "margin",
+        "color": "'#00670c'",
+        "x": "0",
+        "y": "height * 19 / 20",
+        "width": "width",
+        "height": "height / 20"
+    },
+    {
+        "context": "context",
+        "margin": "'margin'",
+        "color": "'#ff0000'",
+        "x": "width * 2 / 20 - platWidth",
+        "y": "height * 16 / 20",
+        "width": "platWidth * 1",
+        "height": "10"
+    },
+    {
+        "context": "context",
+        "margin": "'margin'",
+        "color": "'#00dff'",
+        "x": "width * 6 / 20 - platWidth",
+        "y": "height * 13 / 20",
+        "width": "pplatWidth * 2",
+        "height": "10"
+    }
+]
