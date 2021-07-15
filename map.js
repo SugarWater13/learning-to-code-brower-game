@@ -25,8 +25,8 @@ window.drawMap = function drawMap(context, margin, width, height) {
 
     //define platforms
     var levelMap = []
-      
-    var mapData = require('./level1.json')
+
+    var mapData = []
 
     for (i = 0; i < mapData.length; i++) {
         newPlat = new Plat(mapData(i).context, mapData(i).margin, mapData(i).color, mapData(i).x, mapData(i).y, mapData(i).width, mapData(i).height)
