@@ -26,7 +26,12 @@ var stopX = [];
 var startY = margin + context.canvas.height / 4 - characterHeight;
 var speedY = 0;
 var stopY = [];
+let gotCoin = false;
 
+// let myLevel = './level1.JSON'
+
+
+loadMap(context.canvas.width, context.canvas.height, './level1.JSON')
 
 var render = function () {
 
@@ -74,14 +79,16 @@ var render = function () {
 
     //creatue matrix from imported function
     const levelMap = level.levelMap
+    const coinMap = level.coinMap
+    //debugger
 
     //check each platform objust in the matrix
     for (var i = 0; i < levelMap.length; i++) {
         if (
             //right side of character passes left side of platform
-            startX + characterWidth >= levelMap[i].x
+            startX + characterWidth >= levelMap[i].x + margin
             //left side of character does not pass right side of platform
-            && startX <= levelMap[i].x + levelMap[i].width
+            && startX + margin <= levelMap[i].x + levelMap[i].width
             //character is above platform at the beginning of the frame
             && startY + characterHeight < levelMap[i].y
             //character would be below platform at the end of the frame
@@ -96,15 +103,34 @@ var render = function () {
     }
 
     if (
+        levelMap.length > standingOn
         //character walks off left side of platform
-        stopX + characterWidth < levelMap[standingOn].x
-        //character walks off right side of platform
-        || stopX > levelMap[standingOn].x + levelMap[standingOn].width
+        && (
+            stopX + characterWidth < levelMap[standingOn].x
+            //character walks off right side of platform
+            || stopX > levelMap[standingOn].x + levelMap[standingOn].width
+        )
     ) {
         onGround = false;
     }
 
     startY = stopY;
+
+    for (var i = 0; i < coinMap.length; i++) {
+        if (
+            //right side of character passes left side of coin
+            startX + characterWidth >= coinMap[i].x + margin
+            //left side of character does not pass right side of coin
+            && startX + margin <=levelMap[i].x + coinMap[i].width
+            //bottum of character is below top of coin
+            && startY + characterHeight >= coinMap[i].y + margin
+            //top of character is above bottom of coin
+            && StartY + margin <= coinMap[i].y + lcoinMap[i].height
+        ) {
+            gotCoin = true;
+            loadMap(context.canvas.width, context.canvas.height, './level2.JSON')
+        }
+    }
 
     //draw character
     drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY);
@@ -120,6 +146,9 @@ var render = function () {
 
     const debugText2 = JSON.stringify({ standingOn })
     context.fillText(debugText2, 250, 250);
+
+    const debugText3 = JSON.stringify({ gotCoin })
+    context.fillText(debugText3, 300, 200);
 
     requestAnimationFrame(render);
 }
