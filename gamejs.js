@@ -26,10 +26,6 @@ var stopX = [];
 var startY = margin + context.canvas.height / 4 - characterHeight;
 var speedY = 0;
 var stopY = [];
-let gotCoin = false;
-
-// let myLevel = './level1.JSON'
-
 
 loadMap(context.canvas.width, context.canvas.height, './level1.JSON')
 
@@ -88,7 +84,7 @@ var render = function () {
             //right side of character passes left side of platform
             startX + characterWidth >= levelMap[i].x + margin
             //left side of character does not pass right side of platform
-            && startX + margin <= levelMap[i].x + levelMap[i].width
+            && startX <= levelMap[i].x + levelMap[i].width + margin
             //character is above platform at the beginning of the frame
             && startY + characterHeight < levelMap[i].y
             //character would be below platform at the end of the frame
@@ -106,9 +102,9 @@ var render = function () {
         levelMap.length > standingOn
         //character walks off left side of platform
         && (
-            stopX + characterWidth < levelMap[standingOn].x
+            stopX + characterWidth < levelMap[standingOn].x + margin
             //character walks off right side of platform
-            || stopX > levelMap[standingOn].x + levelMap[standingOn].width
+            || stopX > levelMap[standingOn].x + levelMap[standingOn].width + margin
         )
     ) {
         onGround = false;
@@ -119,19 +115,21 @@ var render = function () {
     for (var i = 0; i < coinMap.length; i++) {
         if (
             //right side of character passes left side of coin
-            startX + characterWidth >= coinMap[i].x + margin
+            startX + characterWidth >= coinMap[i].x
             //left side of character does not pass right side of coin
-            && startX + margin <=levelMap[i].x + coinMap[i].width
+            && startX <= coinMap[i].x + coinMap[i].width
             //bottum of character is below top of coin
-            && startY + characterHeight >= coinMap[i].y + margin
+            && startY + characterHeight >= coinMap[i].y
             //top of character is above bottom of coin
-            && StartY + margin <= coinMap[i].y + lcoinMap[i].height
+            && startY <= coinMap[i].y + coinMap[i].height
         ) {
-            gotCoin = true;
+            coinMap.splice(i);
+        }
+        if (coinMap.length == 0) {
             loadMap(context.canvas.width, context.canvas.height, './level2.JSON')
         }
     }
-
+    
     //draw character
     drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY);
 
@@ -141,14 +139,9 @@ var render = function () {
 
     speedX = 0;
 
-    const debugText = JSON.stringify({ onGround })
-    context.fillText(debugText, 200, 200);
+    // const debugText = JSON.stringify({ gotCoin })
+    // context.fillText(debugText, 200, 200);
 
-    const debugText2 = JSON.stringify({ standingOn })
-    context.fillText(debugText2, 250, 250);
-
-    const debugText3 = JSON.stringify({ gotCoin })
-    context.fillText(debugText3, 300, 200);
 
     requestAnimationFrame(render);
 }
