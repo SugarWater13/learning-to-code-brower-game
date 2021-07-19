@@ -134,16 +134,16 @@ var render = function () {
             coinMap.splice(i, 1);
         }
         if (coinMap.length == 0) {
-            onGround = false
             if (progress < overWorld.length) {
                 loadMap(context.canvas.width, context.canvas.height, nextMap)
-                .then((data) => {
-                    startX = data.spawn.x
-                    startY = (data.spawn.y - characterHeight)
-                })
+                    .then((data) => {
+                        startX = data.spawn.x
+                        startY = (data.spawn.y - characterHeight)
+                    })
                 progress++
                 speedX = 0
                 speedY = 0
+                onGround = false
             }
             else if (progress >= overWorld.length) {
                 loadMap(context.canvas.width, context.canvas.height, './theEnd.JSON')
