@@ -4,32 +4,40 @@ import "./animation.js"
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
-var margin = 10;
-//set canvas size to window size minus margin
-context.canvas.width = window.innerWidth - margin;
-context.canvas.height = window.innerHeight - margin;
+//set canvas size to window size
+context.canvas.width = window.innerWidth - 20;
+context.canvas.height = window.innerHeight - 20;
 //scale character to window
-var characterWidth = window.innerWidth / 20;
-var characterHeight = window.innerWidth * 3 / 40;
+var characterWidth = context.canvas.width / 20;
+var characterHeight = context.canvas.height * 3 / 40;
 //starting possion and movement
-var jumpHeight = 20;
+var jumpHeight = context.canvas.height * 0.021;
 let moveRight = false;
 let moveLeft = false;
 let jumpNow = false;
 let onGround = false;
 var standingOn = 0;
 const fast = 5;
-const grav = 1;
-var startX = context.canvas.width / 4 + margin / 2 - characterWidth / 2;
+const grav = context.canvas.height * 0.001;
+var startX = 0
 var speedX = 0;
 var stopX = [];
-var startY = margin + context.canvas.height / 4 - characterHeight;
+var startY = 0
 var speedY = 0;
 var stopY = [];
+let progress = 1
+let overWorld = ['./level1.JSON', './level2.JSON', './level3.JSON', './level4.JSON', './level5.JSON']
+let youWin = false;
 
 loadMap(context.canvas.width, context.canvas.height, './level1.JSON')
+    .then((data) => {
+        startX = data.spawn.x
+        startY = (data.spawn.y - characterHeight)
+    })
+
 
 var render = function () {
+    let nextMap = overWorld[progress]
 
     //if move imput detected change speed
     if (moveRight) {
@@ -45,13 +53,15 @@ var render = function () {
     //if character hits the walls stop speed
     if (stopX + characterWidth > context.canvas.width) {
         speedX = 0;
-        startX = context.canvas.width - characterWidth
-    } else if (stopX < margin) {
+        stopX = context.canvas.width - characterWidth
+    } else if (stopX <= 0) {
         speedX = 0;
-        startX = margin;
-    } else {
-        //move character equal to speed
-        startX = stopX
+        stopX = 0;
+    }
+
+    if (stopY <= 0) {
+        speedY = 0;
+        stopY = 0;
     }
 
 
@@ -71,26 +81,25 @@ var render = function () {
     stopY = startY + speedY
 
     //function defined in "map.js" sets floor
-    drawMap(context, margin, context.canvas.width, context.canvas.height, startX, stopX, startY, stopY, characterWidth, characterHeight, speedY, onGround)
+    drawMap(context)
 
     //creatue matrix from imported function
     const levelMap = level.levelMap
     const coinMap = level.coinMap
-    //debugger
 
     //check each platform objust in the matrix
     for (var i = 0; i < levelMap.length; i++) {
         if (
             //right side of character passes left side of platform
-            startX + characterWidth >= levelMap[i].x + margin
+            startX + characterWidth >= levelMap[i].x
             //left side of character does not pass right side of platform
-            && startX <= levelMap[i].x + levelMap[i].width + margin
+            && startX <= levelMap[i].x + levelMap[i].width
             //character is above platform at the beginning of the frame
             && startY + characterHeight < levelMap[i].y
             //character would be below platform at the end of the frame
             && stopY + characterHeight >= levelMap[i].y
         ) {
-            stopY = levelMap[i].y + margin - characterHeight;
+            stopY = levelMap[i].y - characterHeight;
             onGround = true;
             speedY = 0;
             standingOn = i;
@@ -102,15 +111,14 @@ var render = function () {
         levelMap.length > standingOn
         //character walks off left side of platform
         && (
-            stopX + characterWidth < levelMap[standingOn].x + margin
+            stopX + characterWidth < levelMap[standingOn].x
             //character walks off right side of platform
-            || stopX > levelMap[standingOn].x + levelMap[standingOn].width + margin
+            || stopX > levelMap[standingOn].x + levelMap[standingOn].width
         )
     ) {
         onGround = false;
     }
 
-    startY = stopY;
 
     for (var i = 0; i < coinMap.length; i++) {
         if (
@@ -123,23 +131,41 @@ var render = function () {
             //top of character is above bottom of coin
             && startY <= coinMap[i].y + coinMap[i].height
         ) {
-            coinMap.splice(i);
+            coinMap.splice(i, 1);
         }
         if (coinMap.length == 0) {
-            loadMap(context.canvas.width, context.canvas.height, './level2.JSON')
+            if (progress < overWorld.length) {
+                loadMap(context.canvas.width, context.canvas.height, nextMap)
+                    .then((data) => {
+                        startX = data.spawn.x
+                        startY = (data.spawn.y - characterHeight)
+                    })
+                progress++
+                speedX = 0
+                speedY = 0
+                onGround = false
+            }
+            else if (progress >= overWorld.length) {
+                loadMap(context.canvas.width, context.canvas.height, './theEnd.JSON')
+                youWin = true;
+            }
         }
     }
-    
+
+
+    if (youWin == true) {
+        context.fillText('You Win!', context.canvas.width / 2, context.canvas.height / 2);
+    }
+
+    startX = stopX
+    startY = stopY;
+
     //draw character
     drawSprite(speedX, context, startX, startY, characterWidth, characterHeight, speedY);
 
-    // //fix margin overlap
-    drawRect(context, '#FFFFFF', -margin, -margin, margin, context.canvas.height)
-    drawRect(context, '#FFFFFF', -margin, -margin, context.canvas.width, margin)
-
     speedX = 0;
 
-    // const debugText = JSON.stringify({ gotCoin })
+    // const debugText = JSON.stringify({ variable i want to read })
     // context.fillText(debugText, 200, 200);
 
 

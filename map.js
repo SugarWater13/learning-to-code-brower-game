@@ -1,6 +1,6 @@
-window.drawRect = function drawRect(context, margin, color, x, y, width, height) {
+window.drawRect = function drawRect(context, color, x, y, width, height) {
     context.fillStyle = color
-    context.fillRect(x + margin, y + margin, width, height);
+    context.fillRect(x, y, width, height);
 }
 
 function Entity(color, x, y, width, height) {
@@ -11,8 +11,13 @@ function Entity(color, x, y, width, height) {
     this.height = height;
 }
 
+function Coordinates(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
 window.loadMap = function (width, height, requestURL) {
-    fetch(requestURL)
+    return fetch(requestURL)
         .then((r) => r.json())
         .then((data) => {
             level.levelMap.length = 0
@@ -24,19 +29,27 @@ window.loadMap = function (width, height, requestURL) {
                 var newCoin = new Entity(one.color, (one.x * width), (one.y * height), (one.width * width), (one.height * height))
                 level.coinMap.push(newCoin)
             })
+            data.sky.forEach((one) => {
+                var sky = new Entity(one.color, 0, 0, width, height)
+                level.sky.push(sky)
+            })
+            var spawn = new Coordinates((data.spawn.x * width), (data.spawn.y * height))
+            level.spawn = spawn
+            return level
         })
 }
 
-window.drawMap = function drawMap(context, margin, width, height) {
+window.drawMap = function drawMap(context) {
 
     //draw background
-    drawRect(context, margin, "#a6a6a6", 0, 0, width, height);
-
+    level.sky.forEach((one) => {
+        drawRect(context, one.color, one.x, one.y, one.width, one.height);
+    })
     level.levelMap.forEach((one) => {
-        drawRect(context, margin, one.color, one.x, one.y, one.width, one.height)
+        drawRect(context, one.color, one.x, one.y, one.width, one.height)
     })
     level.coinMap.forEach((one) => {
-        drawRect(context, margin, one.color, one.x, one.y, one.width, one.height)
+        drawRect(context, one.color, one.x, one.y, one.width, one.height)
     })
 }
 
@@ -44,5 +57,7 @@ window.drawMap = function drawMap(context, margin, width, height) {
 
 export const level = {
     levelMap: [],
-    coinMap: []
+    coinMap: [],
+    sky: [],
+    spawn: { x: 0, y: 0 }
 }
