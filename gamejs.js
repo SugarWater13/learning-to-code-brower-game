@@ -134,16 +134,16 @@ var render = function () {
             coinMap.splice(i, 1);
         }
         if (coinMap.length == 0) {
+            onGround = false
             if (progress < overWorld.length) {
                 loadMap(context.canvas.width, context.canvas.height, nextMap)
-                    .then((data) => {
-                        startX = data.spawn.x
-                        startY = (data.spawn.y - characterHeight)
-                    })
+                .then((data) => {
+                    startX = data.spawn.x
+                    startY = (data.spawn.y - characterHeight)
+                })
                 progress++
                 speedX = 0
                 speedY = 0
-                onGround = false
             }
             else if (progress >= overWorld.length) {
                 loadMap(context.canvas.width, context.canvas.height, './theEnd.JSON')
@@ -155,6 +155,8 @@ var render = function () {
 
     if (youWin == true) {
         context.fillText('You Win!', context.canvas.width / 2, context.canvas.height / 2);
+    } else {
+        context.fillText('use the arrow keys to move and jump', context.canvas.width / 2, context.canvas.height / 2);
     }
 
     startX = stopX
